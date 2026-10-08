@@ -25,10 +25,17 @@
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font-ui); font-size: 14px; line-height: 1.5; touch-action: manipulation; }
   button, input { font: inherit; }
-  .page { max-width: 720px; margin-inline: auto; padding-inline: 16px; padding-block: 12px 32px; display: grid; gap: 12px; }
+  /* 화면 크기에 맞춰 확대: 폭과 높이 중 먼저 닿는 쪽에 맞춤 (아이패드 가로·세로, 데스크톱 모두) */
+  .page { max-width: 1280px; margin-inline: auto; padding-inline: 16px; padding-block: 12px 32px; display: grid; gap: 12px; }
+  .bar, .records, .how { width: 100%; max-width: 900px; margin-inline: auto; }
 
   /* ---------- scaled stage ---------- */
-  .stage-wrap { position: relative; width: 100%; aspect-ratio: 720 / 470; overflow: hidden; }
+  .stage-wrap {
+    position: relative; aspect-ratio: 720 / 470; overflow: hidden; margin-inline: auto;
+    width: min(100%, calc((100vh - 170px) * 720 / 470));
+    width: min(100%, calc((100dvh - 170px) * 720 / 470));
+    min-width: min(100%, 320px);
+  }
   .stage {
     position: absolute; left: 0; top: 0; width: 720px; height: 470px; transform-origin: 0 0; transform: scale(var(--s, 1));
     font-family: var(--font); user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: none;
