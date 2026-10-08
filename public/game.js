@@ -65,9 +65,9 @@
   // ---------- 효과음 ----------
   let actx = null;
   function pop(n) {
-    if (!prefs.sound || prefs.vol <= 0) return;
+    if (prefs.vol <= 0) return;
     try {
-      actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+      actxGet();
       const t = actx.currentTime;
       const o = actx.createOscillator(), g = actx.createGain();
       o.type = 'triangle'; o.frequency.setValueAtTime(520 + n * 40, t); o.frequency.exponentialRampToValueAtTime(220, t + 0.12);
@@ -75,6 +75,79 @@
       o.connect(g).connect(actx.destination); o.start(t); o.stop(t + 0.15);
     } catch (e) {}
   }
+
+
+  // ---------- 합산 점수 / 개인별 점수 ----------
+  function tally(g) {
+    const t = {}; if (!g) return t;
+    Object.values(g.cleared || {}).forEach((v) => { const k = typeof v === 'string' && v ? v : '?'; t[k] = (t[k] || 0) + 1; });
+    return t;
+  }
+  function renderScores() {
+    const el = $('scores'); if (!el) return;
+    el.innerHTML = '';
+    const total = document.createElement('div'); total.className = 'total';
+    const lab = document.createElement('small'); lab.textContent = '팀 점수';
+    total.append(lab, document.createTextNode(String(scoreOf(game)) + '점'));
+    const each = document.createElement('div'); each.className = 'each';
+    const t = tally(game); const list = peerList(); const seen = new Set();
+    const row = (name, color, n, isMe) => {
+      const s = document.createElement('span');
+      const d = document.createElement('i'); d.className = 'dot'; d.style.background = color;
+      const nm = document.createElement('span'); nm.textContent = name + (isMe ? ' (나)' : '');
+      const b = document.createElement('b'); b.textContent = n + '점';
+      s.append(d, nm, b); each.appendChild(s);
+    };
+    list.forEach((p) => { if (seen.has(p.name)) return; seen.add(p.name); row(p.name, p.color, t[p.name] || 0, p.isMe); });
+    Object.keys(t).forEach((k) => { if (!seen.has(k) && k !== '?') { seen.add(k); row(k, '#999999', t[k], false); } });
+    el.append(total, each);
+  }
+
+  // ---------- BGM: 직접 만든 8비트 풍 루프 (원작 음악은 저작물이라 넣지 않음) ----------
+  const MEL = [76,79,81,79,76,79,84,0, 86,84,81,79,81,0,79,0, 76,79,81,79,76,79,84,0, 86,88,86,84,81,0,79,0];
+  const BASS = [48,48,43,43, 45,45,41,41, 48,48,43,43, 41,43,48,48];
+  const bgm = { on: false, step: 0, next: 0, timer: null, gain: null };
+  function midi(m) { return 440 * Math.pow(2, (m - 69) / 12); }
+  function actxGet() {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    if (actx.state === 'suspended') actx.resume().catch(() => {});
+    return actx;
+  }
+  function tone(ctx, dest, f, t, dur, type, g) {
+    const o = ctx.createOscillator(), e = ctx.createGain();
+    o.type = type; o.frequency.value = f;
+    e.gain.setValueAtTime(0.0001, t); e.gain.exponentialRampToValueAtTime(g, t + 0.01); e.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(e).connect(dest); o.start(t); o.stop(t + dur + 0.02);
+  }
+  function bgmTick() {
+    if (!bgm.on || !actx) return;
+    const EIGHTH = 60 / 140 / 2;
+    while (bgm.next < actx.currentTime + 0.35) {
+      const s = bgm.step, m = MEL[s % 32];
+      if (m) tone(actx, bgm.gain, midi(m), bgm.next, EIGHTH * 0.9, 'square', 0.07);
+      if (s % 2 === 0) tone(actx, bgm.gain, midi(BASS[(s / 2) % 16]), bgm.next, EIGHTH * 1.6, 'triangle', 0.16);
+      bgm.step++; bgm.next += EIGHTH;
+    }
+  }
+  function bgmStart() {
+    if (bgm.on) return;
+    try {
+      const ctx = actxGet();
+      bgm.gain = ctx.createGain(); bgm.gain.gain.value = prefs.vol * 0.5; bgm.gain.connect(ctx.destination);
+      bgm.step = 0; bgm.next = ctx.currentTime + 0.05; bgm.on = true;
+      bgm.timer = setInterval(bgmTick, 120); bgmTick();
+    } catch (e) {}
+  }
+  function bgmStop() {
+    if (!bgm.on) return;
+    bgm.on = false; clearInterval(bgm.timer);
+    try { const g = bgm.gain; g.gain.setTargetAtTime(0.0001, actx.currentTime, 0.05); setTimeout(() => { try { g.disconnect(); } catch (e) {} }, 300); } catch (e) {}
+  }
+  function bgmSync() {
+    if (playing() && prefs.sound) bgmStart(); else bgmStop();
+    if (bgm.on && bgm.gain) bgm.gain.gain.value = prefs.vol * 0.5;
+  }
+  function peerList() { const l = peers.length ? peers : [{ id: myId, name: me.name, color: me.color }]; return l.map((p) => ({ name: p.name, color: p.color, isMe: p.id === myId })); }
 
   // ---------- 렌더 ----------
   function render() {
@@ -98,6 +171,8 @@
     scoreEl.textContent = scoreOf(game);
     renderTimer();
     renderLayers();
+    renderScores();
+    bgmSync();
   }
   function renderTimer() {
     const rem = game ? Math.max(0, Math.min(DURATION, game.endsAt - now())) : DURATION;
@@ -110,6 +185,7 @@
     startLayer.hidden = inLobby || !!game;
     resultLayer.hidden = inLobby || !game || playing();
     $('roomBar').hidden = inLobby;
+    $('scores').hidden = inLobby;
     $('recordsBox').hidden = inLobby;
     $('startBtn').disabled = !connected;
     $('againBtn').disabled = !connected;
@@ -118,7 +194,8 @@
     if (!resultLayer.hidden) {
       $('finalScore').textContent = scoreOf(game);
       const b = best ? best.score : 0;
-      $('resultMsg').textContent = scoreOf(game) > 0 && scoreOf(game) >= b ? '이 방 최고 기록!' : '최고 기록 ' + b + '점';
+      const t = tally(game); const parts = Object.keys(t).sort((x, y) => t[y] - t[x]).map((k) => k + ' ' + t[k]);
+      $('resultMsg').textContent = (scoreOf(game) > 0 && scoreOf(game) >= b ? '이 방 최고 기록!' : '최고 기록 ' + b + '점') + (parts.length > 1 ? '  ·  ' + parts.join(' · ') : '');
     }
   }
   function renderRecords(list) {
@@ -127,12 +204,12 @@
     list.forEach((r, i) => {
       const li = document.createElement('li');
       const l = document.createElement('span'); const d = new Date(r.at);
-      l.textContent = (i + 1) + '위 · ' + (d.getMonth() + 1) + '/' + d.getDate() + ' ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0') + ' · ' + (r.players || 1) + '명';
+      l.textContent = (i + 1) + '위 · ' + (d.getMonth() + 1) + '/' + d.getDate() + ' ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0') + ' · ' + (r.players || 1) + '명' + (r.by && Object.keys(r.by).length > 1 ? ' · ' + Object.keys(r.by).map((k) => k + ' ' + r.by[k]).join(' · ') : '');
       const s = document.createElement('span'); s.className = 's'; s.textContent = r.score + '점';
       li.append(l, s); recordsEl.appendChild(li);
     });
   }
-  setInterval(() => { if (code) { renderTimer(); if (game && game.status === 'playing' && now() >= game.endsAt) renderLayers(); } }, 200);
+  setInterval(() => { if (code) { renderTimer(); if (game && game.status === 'playing' && now() >= game.endsAt) { renderLayers(); bgmSync(); } } }, 200);
 
   // ---------- 조작 ----------
   function startGame() { if (connected) sendMsg({ t: 'start' }); }
@@ -157,8 +234,8 @@
   try { Object.assign(prefs, JSON.parse(ls('fb-prefs') || '{}')); } catch (e) {}
   applyPrefs();
   chkLight.addEventListener('click', () => { prefs.light = !prefs.light; applyPrefs(); });
-  chkSound.addEventListener('click', () => { prefs.sound = !prefs.sound; applyPrefs(); if (prefs.sound) pop(1); });
-  vol.addEventListener('input', () => { prefs.vol = vol.value / 100; ls('fb-prefs', JSON.stringify(prefs)); });
+  chkSound.addEventListener('click', () => { prefs.sound = !prefs.sound; applyPrefs(); bgmSync(); });
+  vol.addEventListener('input', () => { prefs.vol = vol.value / 100; ls('fb-prefs', JSON.stringify(prefs)); bgmSync(); });
   vol.addEventListener('change', () => pop(1));
 
   // ---------- 드래그 선택 ----------
@@ -215,7 +292,7 @@
     drag = null; endSelection();
     if (r.sum === 10 && r.inside.length) {
       // 먼저 화면에서 지우고(즉시 반응), 서버가 확정한 판으로 다시 맞춤
-      r.inside.forEach((i) => { game.cleared[i] = 1; });
+      r.inside.forEach((i) => { game.cleared[i] = me.name; });
       pop(r.inside.length); render();
       sendMsg({ t: 'clear', idxs: r.inside });
     }
@@ -225,6 +302,7 @@
 
   // ---------- 참가자 ----------
   function renderPeers() {
+    renderScores();
     playersEl.innerHTML = ''; peerLayer.innerHTML = '';
     const list = peers.length ? peers : [{ id: myId, name: me.name, color: me.color }];
     list.forEach((p) => {
@@ -294,6 +372,7 @@
   function leaveRoom() {
     sendMsg({ t: 'leave' });
     code = null; game = null; renderedGameId = null; peers = [];
+    bgmStop();
     try { history.replaceState(null, '', location.pathname); } catch (e) {}
     resetReset(); endSelection();
     render();

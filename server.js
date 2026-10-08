@@ -56,7 +56,7 @@ function finishGame(code, room) {
   g.status = 'ended';
   clearTimeout(room.timer); room.timer = null;
   const list = records[code] || [];
-  list.push({ score: scoreOf(g), at: g.endsAt, players: Math.max(1, room.clients.size) });
+  list.push({ score: scoreOf(g), at: g.endsAt, players: Math.max(1, room.clients.size), by: tally(g) });
   list.sort((a, b) => b.score - a.score);
   records[code] = list.slice(0, 20);
   saveRecords();
@@ -71,7 +71,8 @@ function startGame(code, room, by) {
   sendState(code, room);
 }
 
-function clearCells(code, room, idxs) {
+function tally(g) { const t = {}; Object.values(g.cleared).forEach((v) => { const k = typeof v === 'string' ? v : '?'; t[k] = (t[k] || 0) + 1; }); return t; }
+function clearCells(code, room, idxs, by) {
   const g = room.game;
   if (!g || g.status !== 'playing' || Date.now() > g.endsAt) return;
   if (!Array.isArray(idxs) || !idxs.length || idxs.length > N) return;
@@ -79,7 +80,7 @@ function clearCells(code, room, idxs) {
   if (uniq.some((i) => !Number.isInteger(i) || i < 0 || i >= N || g.cleared[i])) return;
   let sum = 0; uniq.forEach((i) => { sum += g.board[i]; });
   if (sum !== 10) return;
-  uniq.forEach((i) => { g.cleared[i] = 1; });
+  uniq.forEach((i) => { g.cleared[i] = by || '?'; });
   sendState(code, room);
 }
 
@@ -129,7 +130,7 @@ wss.on('connection', (ws) => {
     }
     const code = ws.meta.room; const room = code && rooms.get(code); if (!room) return;
     if (m.t === 'start') startGame(code, room, ws.meta.name);
-    else if (m.t === 'clear') clearCells(code, room, m.idxs);
+    else if (m.t === 'clear') clearCells(code, room, m.idxs, ws.meta.name);
     else if (m.t === 'sel') {
       const s = m.sel && typeof m.sel === 'object' ? { x: +m.sel.x || 0, y: +m.sel.y || 0, w: Math.max(0, +m.sel.w || 0), h: Math.max(0, +m.sel.h || 0) } : null;
       ws.meta.sel = s;

@@ -152,6 +152,13 @@
   .bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; font-size: 13px; }
   .bar .code { font-family: var(--font); font-weight: 800; font-size: 18px; letter-spacing: 0.12em; color: var(--green-dk); }
   .bar .copy { border: 1px solid var(--line); background: var(--panel); color: var(--fg); border-radius: 6px; padding: 3px 9px; cursor: pointer; font-size: 12px; }
+  .scores { width: 100%; max-width: 900px; margin-inline: auto; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; font-variant-numeric: tabular-nums; }
+  .scores .total { font-family: var(--font); font-weight: 800; font-size: 24px; line-height: 1; color: var(--green-dk); display: flex; align-items: baseline; gap: 8px; }
+  .scores .total small { font-family: var(--font-ui); font-size: 12px; font-weight: 700; color: var(--muted); }
+  .scores .each { display: flex; flex-wrap: wrap; gap: 6px 16px; }
+  .scores .each span { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; }
+  .scores .each b { font-family: var(--font); font-size: 18px; line-height: 1; }
+  .scores .each .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
   .players { display: flex; flex-wrap: wrap; gap: 6px; }
   .chip { display: inline-flex; align-items: center; gap: 5px; padding: 2px 9px 2px 6px; border-radius: 999px; background: var(--panel); border: 1px solid var(--line); font-size: 12.5px; }
   .chip .dot { width: 9px; height: 9px; border-radius: 50%; background: currentColor; }
@@ -195,7 +202,7 @@
       <button class="chk chk-light" id="chkLight" type="button" aria-label="Light Colors"></button>
       <div class="lbl lbl-light">Light Colors</div>
       <button class="chk chk-sound on" id="chkSound" type="button" aria-label="Sound"></button>
-      <div class="lbl lbl-sound">Sound</div>
+      <div class="lbl lbl-sound">BGM</div>
       <div class="note" aria-hidden="true"><svg viewBox="0 0 18 20"><path d="M6 15.5a3 3 0 1 1-2-2.8V3l10-2v11.5a3 3 0 1 1-2-2.8V5.2L6 6.4z" fill="#fff"/></svg></div>
       <input class="vol" id="vol" type="range" min="0" max="100" value="60" aria-label="Volume">
 
@@ -236,6 +243,7 @@
     </div>
   </div>
 
+  <div class="scores" id="scores" hidden></div>
   <div class="bar" id="roomBar" hidden>
     <span>방 코드 <span class="code" id="codeOut">----</span></span>
     <button class="copy" id="copyCode" type="button">코드 복사</button>
