@@ -23,13 +23,15 @@ npm start
 
 ## 계속 살아있는 주소가 필요하면 (Render 무료 배포)
 
-빙고(duo-bingo)와 같은 방식입니다.
+빙고(duo-bingo)와 같은 방식입니다. 저장소는 https://github.com/leedoeun99/apple-coop 에 올라가 있습니다.
 
-**1. GitHub에 올리기** — [github.com/new](https://github.com/new) 에서 빈 저장소를 만듭니다.
-(README·.gitignore·license는 **체크하지 마세요.** 빈 저장소여야 합니다.)
+가장 빠른 방법은 아래 버튼입니다. Render에 로그인하면 `render.yaml` 설정으로 바로 배포됩니다.
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/leedoeun99/apple-coop)
+
+**1. GitHub에 올리기** — 이미 올라가 있습니다. 코드를 고친 뒤에는 커밋하고 푸시하면 Render가 자동으로 다시 배포합니다.
 
 ```bash
-git remote add origin https://github.com/<내계정>/apple-coop.git
 git push -u origin main
 ```
 
