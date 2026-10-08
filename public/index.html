@@ -23,7 +23,7 @@
   :root[data-theme="dark"] { --bg: #141814; --fg: #e9eee8; --muted: #9aa69b; --line: #2b332c; --panel: #1b211c; color-scheme: dark; }
 
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font-ui); font-size: 14px; line-height: 1.5; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font-ui); font-size: 14px; line-height: 1.5; touch-action: manipulation; }
   button, input { font: inherit; }
   .page { max-width: 720px; margin-inline: auto; padding-inline: 16px; padding-block: 12px 32px; display: grid; gap: 12px; }
 
@@ -31,7 +31,7 @@
   .stage-wrap { position: relative; width: 100%; aspect-ratio: 720 / 470; overflow: hidden; }
   .stage {
     position: absolute; left: 0; top: 0; width: 720px; height: 470px; transform-origin: 0 0; transform: scale(var(--s, 1));
-    font-family: var(--font); user-select: none; -webkit-user-select: none; touch-action: none;
+    font-family: var(--font); user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: none;
   }
   .stage * { position: absolute; }
   .frame { left: 3px; top: 3px; width: 717px; height: 468px; border-radius: 27px; background: linear-gradient(180deg, #1ad175 0, #00cc66 14px); }
