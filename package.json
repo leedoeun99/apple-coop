@@ -1,0 +1,16 @@
+{
+  "name": "apple-coop",
+  "version": "1.0.0",
+  "description": "사과게임(Fruit Box) 협동전 - 친구와 같은 판을 실시간으로 함께 지우는 서버",
+  "main": "server.js",
+  "private": true,
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}

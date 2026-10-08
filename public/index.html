@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>사과게임 협동전</title>
+<style>[hidden]{display:none!important} html{color-scheme:light}</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800&family=Noto+Sans+KR:wght@400;700&display=swap">
+<style>
+  /* Layout: a 720x470 stage reproduced from the original Fruit Box (frame 3,3 717x468 / board 18,18 683x435 /
+     apples at 85+33c, 88+33r / score right-aligned at x664 / time bar 650..659 x 93..395 / bottom bar y436..457),
+     scaled to the page width with transform. Everything else (room, players, records) sits under the stage. */
+  :root {
+    --bg: #ffffff; --fg: #333333; --muted: #777777; --line: #e3e3e3; --panel: #f7f9f5;
+    --green: #00cc66; --green-dk: #00a854; --board-a: #d6f7ce; --board-b: #efffef;
+    --apple-hi: #ff6655; --apple: #ff2626; --apple-lo: #e30000;
+    --font: "M PLUS Rounded 1c", "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+    --font-ui: "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --bg: #141814; --fg: #e9eee8; --muted: #9aa69b; --line: #2b332c; --panel: #1b211c; color-scheme: dark; }
+  }
+  :root[data-theme="dark"] { --bg: #141814; --fg: #e9eee8; --muted: #9aa69b; --line: #2b332c; --panel: #1b211c; color-scheme: dark; }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font-ui); font-size: 14px; line-height: 1.5; }
+  button, input { font: inherit; }
+  .page { max-width: 720px; margin-inline: auto; padding-inline: 16px; padding-block: 12px 32px; display: grid; gap: 12px; }
+
+  /* ---------- scaled stage ---------- */
+  .stage-wrap { position: relative; width: 100%; aspect-ratio: 720 / 470; overflow: hidden; }
+  .stage {
+    position: absolute; left: 0; top: 0; width: 720px; height: 470px; transform-origin: 0 0; transform: scale(var(--s, 1));
+    font-family: var(--font); user-select: none; -webkit-user-select: none; touch-action: none;
+  }
+  .stage * { position: absolute; }
+  .frame { left: 3px; top: 3px; width: 717px; height: 468px; border-radius: 27px; background: linear-gradient(180deg, #1ad175 0, #00cc66 14px); }
+  /* the frame's transparent window: stage x 42..677, y 48..426; gingham lines aligned to the original tile phase */
+  .plaid {
+    left: 42px; top: 48px; width: 635px; height: 378px; background-color: var(--board-a);
+    background-image: linear-gradient(to right, transparent 7px, var(--board-b) 7px), linear-gradient(to bottom, transparent 7px, var(--board-b) 7px);
+    background-size: 9px 9px; background-position: 4px 6px;
+    box-shadow: inset 2px 2px 3px rgba(0, 0, 0, 0.3);
+  }
+  .stage.inlobby .score, .stage.inlobby .tbar { display: none; }
+  .board { left: 0; top: 0; width: 720px; height: 470px; }
+
+  /* apples: the original's vector paths (body #FF3333, stem #993300, yellow outline when selected) */
+  .defs { width: 0; height: 0; overflow: hidden; }
+  .apple { width: 36px; height: 36px; overflow: visible; filter: drop-shadow(0 1.5px 1px rgba(0, 0, 0, 0.32)); }
+  .apple .selo { display: none; }
+  .apple text { fill: #fff; font-family: var(--font); font-weight: 700; font-size: 16px; }
+  .apple.hl .selo { display: inline; }
+  .apple.pop { animation: pop 180ms ease-out forwards; }
+  .apple.gone { display: none; }
+  @keyframes pop { to { transform: scale(0.1); opacity: 0; } }
+  .light .apple { --ap-body: #ff6655; }
+  .light .plaid { --board-a: #eefbea; --board-b: #ffffff; }
+  .light .big-svg { --ba-body: #ff6655; --ba-stem: #bb5555; --ba-leaf: #55aa33; }
+
+  .score { left: 0; top: 54px; width: 664px; text-align: right; color: #00cc00; font-weight: 700; font-size: 16px; line-height: 16px; font-variant-numeric: tabular-nums; }
+  .tbar { left: 650px; top: 93px; width: 9px; height: 302px; background: #ebf8dd; border-radius: 2px; }
+  .tfill { left: 1px; right: 1px; bottom: 1px; height: 300px; background: var(--green); border-radius: 1px; }
+
+  .sel { border: 2px solid #ffff00; pointer-events: none; z-index: 3; border-radius: 2px; }
+  .sel .sum { right: -2px; bottom: -2px; transform: translateY(100%); background: #333; color: #ffff66; font-weight: 700; font-size: 11px; line-height: 1; padding: 2px 5px; border-radius: 4px; }
+  .sel.ten { border-color: #ffd400; }
+  .sel.ten .sum { background: #ffd400; color: #333; }
+  .peer-sel { border: 2px dashed currentColor; pointer-events: none; z-index: 2; border-radius: 2px; }
+  .peer-sel .who { left: -2px; top: -2px; transform: translateY(-100%); background: currentColor; padding: 1px 5px; border-radius: 4px 4px 4px 0; font-size: 10px; font-weight: 700; line-height: 1.3; white-space: nowrap; }
+  .peer-sel .who span { position: static; color: #fff; }
+
+  /* bottom controls (original positions) */
+  .bt-reset {
+    left: 61px; top: 436px; width: 52px; height: 21px; border-radius: 5px; background: var(--green); border: 2px solid #fff;
+    color: #fff; font-weight: 700; font-size: 12px; line-height: 17px; text-align: center; padding: 0; cursor: pointer; font-family: var(--font);
+  }
+  .bt-reset.warn { background: #ff9900; }
+  .bt-reset:focus-visible, .chk:focus-visible, .big-btn:focus-visible, .play:focus-visible { outline: 2px solid #ffff00; }
+  .chk { width: 12px; height: 12px; top: 445px; border-radius: 2px; background: #fff; border: 0; padding: 0; cursor: pointer; }
+  .chk.on::after { content: ""; left: 2px; top: 1px; width: 5px; height: 8px; border: solid var(--green); border-width: 0 2.5px 2.5px 0; transform: rotate(40deg); border-radius: 1px; }
+  .chk-light { left: 449px; }
+  .chk-sound { left: 539px; }
+  .lbl { top: 443px; color: #fff; font-size: 12px; font-weight: 500; line-height: 16px; white-space: nowrap; }
+  .lbl-light { left: 465px; }
+  .lbl-sound { left: 556px; }
+  .note { left: 612px; top: 436px; width: 18px; height: 20px; }
+  .note svg { position: static; width: 18px; height: 20px; display: block; }
+  .vol { left: 638px; top: 436px; width: 36px; height: 20px; margin: 0; -webkit-appearance: none; appearance: none; background: transparent; cursor: pointer; }
+  .vol::-webkit-slider-runnable-track { height: 3px; background: #fff; border-radius: 2px; }
+  .vol::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 9px; height: 9px; border-radius: 50%; background: #fff; border: 2px solid var(--green-dk); margin-top: -3px; }
+  .vol::-moz-range-track { height: 3px; background: #fff; border-radius: 2px; }
+  .vol::-moz-range-thumb { width: 6px; height: 6px; border-radius: 50%; background: #fff; border: 2px solid var(--green-dk); }
+
+  /* overlays inside stage. --cx is the apple grid's centre line (stage x 349) in layer coordinates. */
+  .layer { left: 42px; top: 48px; width: 635px; height: 378px; --cx: 307px; }
+  .big-apple {
+    width: 150px; height: 152px; background: transparent; border: 0; cursor: pointer; font-family: var(--font); padding: 0; color: #fff;
+    filter: drop-shadow(2px 4px 4px rgba(0, 0, 0, 0.25));
+  }
+  .big-apple .big-svg { left: 0; top: 0; width: 150px; height: 152px; overflow: visible; }
+  .big-apple .cap { left: 0; top: 30px; width: 150px; height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; line-height: 1.05; }
+  .big-apple .cap span, .big-apple .cap b { position: static; display: block; }
+  .big-apple:active { transform: scale(0.97); }
+  .big-apple[disabled] { filter: grayscale(0.5); cursor: not-allowed; }
+  .big-btn {
+    width: 157px; height: 34px; border-radius: 6px; background: var(--green); border: 2px solid #fff; color: #fff; font-weight: 700; font-size: 16px;
+    line-height: 30px; text-align: center; padding: 0; cursor: pointer; font-family: var(--font);
+    left: calc(var(--cx) - 78.5px);
+  }
+  .big-btn[disabled] { opacity: 0.6; cursor: not-allowed; }
+
+  /* lobby layer: logo + Play apple on the left, form on the right, the pair centred on --cx */
+  .lobby .logo { left: calc(var(--cx) - 262px); top: 6px; width: 260px; text-align: center; }
+  .lobby .logo .small { position: static; display: block; color: #35b23a; font-weight: 800; font-size: 20px; line-height: 1; letter-spacing: 0.02em; }
+  .lobby .logo .big { position: static; display: block; font-weight: 800; font-size: 54px; line-height: 1.05; color: #ff7a1a; text-shadow: 2px 3px 0 #fff, 3px 4px 0 rgba(0,0,0,0.12); margin-top: 4px; }
+  .lobby .logo .big i { font-style: normal; color: #2fbf4b; }
+  .play { left: calc(var(--cx) - 207px); top: 116px; font-size: 32px; font-weight: 800; }
+  .play .cap { font-size: 32px; font-weight: 800; }
+  .form { left: calc(var(--cx) - 20px); top: 86px; width: 300px; display: grid; gap: 12px; }
+  .form > div, .form label, .form .row, .form input, .form small, .form .cap { position: static; }
+  .form label { display: block; color: #1f6b35; font-weight: 700; font-size: 13px; margin-bottom: 4px; }
+  .form input {
+    width: 100%; height: 40px; border: 2px solid #8fd79a; border-radius: 8px; background: #fff; color: #333; padding: 0 12px;
+    font-family: var(--font); font-weight: 700; font-size: 18px;
+  }
+  .form input:focus { outline: 3px solid #ffe066; border-color: #ffd400; }
+  .form small { display: block; color: #2b7a3e; font-size: 11.5px; margin-top: 4px; line-height: 1.35; }
+  .form .row { display: flex; gap: 8px; }
+  .form .row button { position: static; height: 40px; padding: 0 12px; border-radius: 8px; border: 2px solid #fff; background: var(--green); color: #fff; font-weight: 700; cursor: pointer; white-space: nowrap; font-family: var(--font); }
+  .form .cap { color: #1f6b35; font-size: 12px; line-height: 1.4; }
+
+  /* result layer (original: apple with Score + number, two green buttons under it) */
+  .result .big-apple { left: calc(var(--cx) - 75px); top: 29px; cursor: default; }
+  .result .big-apple .cap { font-size: 20px; font-weight: 700; }
+  .result .big-apple .cap b { font-size: 46px; line-height: 1; margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .result .again { top: 249px; }
+  .result .lobbyBtn { top: 289px; }
+  .result .msg { left: calc(var(--cx) - 200px); top: 2px; width: 400px; text-align: center; color: #1f6b35; font-weight: 700; font-size: 15px; }
+  .start .big-apple { left: calc(var(--cx) - 75px); top: 88px; }
+  .start .big-apple .cap { font-size: 30px; font-weight: 800; }
+  .start .msg { left: calc(var(--cx) - 200px); top: 258px; width: 400px; text-align: center; color: #1f6b35; font-weight: 700; font-size: 15px; line-height: 1.4; }
+
+  /* under the stage */
+  .bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; font-size: 13px; }
+  .bar .code { font-family: var(--font); font-weight: 800; font-size: 18px; letter-spacing: 0.12em; color: var(--green-dk); }
+  .bar .copy { border: 1px solid var(--line); background: var(--panel); color: var(--fg); border-radius: 6px; padding: 3px 9px; cursor: pointer; font-size: 12px; }
+  .players { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { display: inline-flex; align-items: center; gap: 5px; padding: 2px 9px 2px 6px; border-radius: 999px; background: var(--panel); border: 1px solid var(--line); font-size: 12.5px; }
+  .chip .dot { width: 9px; height: 9px; border-radius: 50%; background: currentColor; }
+  .chip .nm { color: var(--fg); }
+  .status { flex: 1 1 100%; color: var(--muted); font-size: 12.5px; min-width: 0; }
+  .records { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; }
+  .records h3 { margin: 0 0 6px; font-size: 12px; color: var(--muted); letter-spacing: 0.05em; }
+  .records ol { margin: 0; padding: 0; list-style: none; display: grid; gap: 2px; }
+  .records li { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; font-variant-numeric: tabular-nums; }
+  .records li .s { font-family: var(--font); font-weight: 800; font-size: 15px; }
+  .records li:first-child .s { color: var(--green-dk); }
+  .records .empty { color: var(--muted); font-size: 12.5px; }
+  .how { color: var(--muted); font-size: 12.5px; margin: 0; }
+  .how b { color: var(--fg); }
+  @media (prefers-reduced-motion: reduce) { .apple.pop { animation: none; display: none; } .apple { transition: none; } }
+</style>
+
+</head>
+<body>
+<div class="page">
+  <div class="stage-wrap" id="wrap">
+    <div class="stage" id="stage">
+      <svg class="defs" aria-hidden="true"><defs>
+        <g id="big-apple-g">
+          <path fill="var(--ba-body, #ff3300)" d="M-27.4 55.8Q-40.9 51.2 -51 41.4Q-72.1 21 -72.1 -7.7Q-72.2 -23.1 -67.4 -34Q-62.2 -46 -50.5 -54Q-40.9 -60.8 -19.8 -59.8Q-11.4 -59.4 -4.3 -58.2L-0.9 -57.5L3.7 -58.3L4.8 -58.5Q12 -59.5 19 -59.8Q41 -60.7 51.2 -54Q63.1 -46.3 68.1 -34Q72.2 -23.6 72.2 -7.7Q72.2 21 51.1 41.4Q40.8 51.3 28.1 55.8Q16.2 60 0.7 60Q-14.9 60 -27.4 55.8Z"/>
+          <path fill="var(--ba-stem, #990000)" transform="translate(0.7 -71)" d="M-5 12.7L-4.2 4.4Q-3.6 -4.7 -3.1 -8.2Q-3 -9.9 -2.8 -10.5Q-2.3 -12.1 -1 -12.9Q0.4 -13.6 2.1 -13.2Q3.7 -12.9 4.6 -11.5Q5.3 -10.1 5 -8.6L4.8 -7.6L4.8 -7.4L4.1 0.1L3.7 5L3.5 6.6L3 12.6L-1.6 13.4L-5 12.7Z"/>
+          <path fill="var(--ba-leaf, #339900)" transform="translate(21.4 -73.9)" d="M-17.1 9.5L-16.9 7.9L-16.5 3L-15.6 2.2Q-11.1 -1.7 -3.7 -5.1Q3.5 -8.5 9.5 -9.4Q12.2 -9.8 14.8 -9.2Q17.1 -8.8 17.2 -8.3Q17.4 -7.6 16.4 -6Q15.2 -3.9 13.2 -2.1Q8.7 1.6 1.3 5.1Q-6 8.5 -12 9.4Q-13.7 9.7 -15.1 9.7Q-16.3 9.7 -17.1 9.5Z"/>
+        </g>
+        <path id="ap-body" fill="var(--ap-body, #ff3333)" transform="translate(0 1.64)" d="M-8.7 7.6Q-12.4 3.6 -12.4 -1.8Q-12.4 -8.5 -8.4 -10.8Q-6.7 -11.9 -2.9 -11Q-1.4 -10.6 -0.1 -10.1L0.6 -9.9L1.5 -10.2L3.9 -10.8Q7.5 -11.6 9 -10.6Q11.1 -9.4 11.9 -6.9Q12.5 -5.1 12.5 -1.8Q12.5 3.6 8.8 7.6Q5.2 11.5 0 11.5Q-5.1 11.5 -8.7 7.6Z"/>
+        <path id="ap-stem" fill="#993300" transform="translate(1.8 -10.675)" d="M-2.2 2.1Q-2.1 1.3 -1.7 0.5Q-1.1 -0.5 -0.2 -1.2L0.2 -1.8Q0.4 -2 0.7 -2.2Q1.1 -2.4 1.5 -2.4Q2 -2.4 2.1 -2.2Q2.2 -2.1 2.2 -2.1Q2.3 -2.1 2.3 -2Q2.3 -2 2.3 -1.9Q2.3 -1.8 2.2 -1.8L1.3 -0.9Q0.6 -0.3 0.2 0.5Q-0.1 1.3 -0.2 2.1L-1.4 2.5L-2.2 2.1Z"/>
+        <path id="ap-selo" fill="#ffff66" transform="translate(0 1.63) scale(1.09)" d="M-10.5 9.3Q-14.9 4.6 -14.9 -1.8Q-14.9 -10.2 -9.7 -13Q-7.3 -14.6 -2.2 -13.4Q-0.7 -13 0.6 -12.5L0.7 -12.5L3.4 -13.3Q8.2 -14.3 10.3 -12.8L10.3 -12.7Q13.2 -11 14.3 -7.7Q15 -5.6 15 -1.8Q15 4.6 10.7 9.3Q6.3 14 0 14Q-6.2 14 -10.5 9.3Z"/>
+      </defs></svg>
+      <div class="frame"></div>
+      <div class="plaid"></div>
+      <div class="board" id="board">
+        <div class="score" id="score">0</div>
+        <div class="tbar"><div class="tfill" id="tfill"></div></div>
+      </div>
+      <!-- bottom controls -->
+      <button class="bt-reset" id="resetBtn" type="button">Reset</button>
+      <button class="chk chk-light" id="chkLight" type="button" aria-label="Light Colors"></button>
+      <div class="lbl lbl-light">Light Colors</div>
+      <button class="chk chk-sound on" id="chkSound" type="button" aria-label="Sound"></button>
+      <div class="lbl lbl-sound">Sound</div>
+      <div class="note" aria-hidden="true"><svg viewBox="0 0 18 20"><path d="M6 15.5a3 3 0 1 1-2-2.8V3l10-2v11.5a3 3 0 1 1-2-2.8V5.2L6 6.4z" fill="#fff"/></svg></div>
+      <input class="vol" id="vol" type="range" min="0" max="100" value="60" aria-label="Volume">
+
+      <!-- lobby -->
+      <div class="layer lobby" id="lobby">
+        <div class="logo"><span class="small">협동전</span><span class="big">Fruit <i>Box</i></span></div>
+        <button class="big-apple play" id="playBtn" type="button"><svg class="big-svg" viewBox="-75 -90 150 152"><use href="#big-apple-g"/></svg><span class="cap"><span>Play</span></span></button>
+        <div class="form">
+          <div>
+            <label for="nameIn">이름</label>
+            <input id="nameIn" maxlength="12" placeholder="예: 도은" autocomplete="off">
+          </div>
+          <div>
+            <label for="codeIn">방 코드</label>
+            <div class="row">
+              <input id="codeIn" maxlength="8" placeholder="예: apple1" autocomplete="off" autocapitalize="off" spellcheck="false">
+              <button type="button" id="newCode">새 코드</button>
+            </div>
+            <small>친구가 같은 코드를 입력하면 같은 방에 들어옵니다. 영문·숫자 2~8자.</small>
+          </div>
+          <div class="cap" id="lobbyCap">서버에 연결하는 중…</div>
+        </div>
+      </div>
+
+      <!-- waiting for a round -->
+      <div class="layer start" id="startLayer" hidden>
+        <button class="big-apple" id="startBtn" type="button"><svg class="big-svg" viewBox="-75 -90 150 152"><use href="#big-apple-g"/></svg><span class="cap"><span>Start</span></span></button>
+        <div class="msg" id="startMsg">Start를 누르면 2분 동안 같이 사과를 지웁니다.</div>
+      </div>
+
+      <!-- result -->
+      <div class="layer result" id="resultLayer" hidden>
+        <div class="msg" id="resultMsg"></div>
+        <div class="big-apple"><svg class="big-svg" viewBox="-75 -90 150 152"><use href="#big-apple-g"/></svg><span class="cap"><span>Score</span><b id="finalScore">0</b></span></div>
+        <button class="big-btn again" id="againBtn" type="button">Play Again</button>
+        <button class="big-btn lobbyBtn" id="lobbyBtn" type="button">Lobby</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="bar" id="roomBar" hidden>
+    <span>방 코드 <span class="code" id="codeOut">----</span></span>
+    <button class="copy" id="copyCode" type="button">코드 복사</button>
+    <div class="players" id="players"></div>
+    <div class="status" id="status"></div>
+  </div>
+
+  <section class="records" id="recordsBox" hidden>
+    <h3>이 방의 최고 기록</h3>
+    <ol id="records"><li class="empty">아직 끝난 판이 없어요.</li></ol>
+  </section>
+
+  <p class="how"><b>규칙</b> 원작 Fruit Box와 같습니다. 사각형으로 드래그해 사과 숫자의 합이 정확히 10이면 사라지고, 사과 1개당 1점, 제한 시간 2분. 같은 방 코드로 들어온 사람들은 같은 판을 보고, 지운 사과가 한 점수로 합산됩니다.</p>
+</div>
+
+<script src="game.js"></script>
+</body>
+</html>
