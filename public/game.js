@@ -246,10 +246,12 @@
   }
   function cellsInRect(x0, y0, x1, y1) {
     const minx = Math.min(x0, x1), maxx = Math.max(x0, x1), miny = Math.min(y0, y1), maxy = Math.max(y0, y1), out = [];
+    // 사각형이 사과 몸통(가장자리 4px 안쪽)과 조금이라도 겹치면 선택 — 작게 그어도 지워짐
+    const HX = 8.5, HY_UP = 6.5, HY_DN = 9;
     for (let i = 0; i < N; i++) {
       if (game.cleared[i]) continue;
-      const cx = AX + GAP * (i % COLS), cy = AY + GAP * Math.floor(i / COLS) + 2;
-      if (cx >= minx && cx <= maxx && cy >= miny && cy <= maxy) out.push(i);
+      const cx = AX + GAP * (i % COLS), cy = AY + GAP * Math.floor(i / COLS) + 1.6;
+      if (cx + HX >= minx && cx - HX <= maxx && cy + HY_DN >= miny && cy - HY_UP <= maxy) out.push(i);
     }
     return out;
   }
