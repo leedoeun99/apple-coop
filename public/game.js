@@ -23,7 +23,7 @@
   let game = null, renderedGameId = null, best = null;
   let peers = [];           // [{id,name,color,sel}]
   let confirmTimer = null;
-  const prefs = { light: false, sound: true, vol: 0.6 };
+  const prefs = { light: false, sound: true, vol: 0.6, fruit: 'apple' };
 
   function pickColor() { const p = ['#3b82f6', '#8b5cf6', '#0ea5e9', '#f97316', '#ec4899', '#14b8a6']; return p[Math.floor(Math.random() * p.length)]; }
   function now() { return Date.now() + clockOffset; }
@@ -48,6 +48,7 @@
     a.appendChild(useOf('#ap-selo', 'selo'));
     a.appendChild(useOf('#ap-body', 'body'));
     a.appendChild(useOf('#ap-stem', 'stem'));
+    a.appendChild(useOf('#bb-body-g', 'bbody'));
     const t = document.createElementNS(SVG, 'text');
     t.setAttribute('x', '0'); t.setAttribute('y', '7.2'); t.setAttribute('text-anchor', 'middle');
     a.appendChild(t);
@@ -229,8 +230,13 @@
     chkLight.classList.toggle('on', prefs.light);
     chkSound.classList.toggle('on', prefs.sound);
     vol.value = Math.round(prefs.vol * 100);
+    const bb = prefs.fruit === 'blueberry';
+    stage.classList.toggle('theme-blueberry', bb);
+    document.body.classList.toggle('theme-blueberry', bb);
+    document.querySelectorAll('.fruit-btn').forEach((b) => b.classList.toggle('on', b.dataset.fruit === prefs.fruit));
     ls('fb-prefs', JSON.stringify(prefs));
   }
+  document.querySelectorAll('.fruit-btn').forEach((b) => b.addEventListener('click', () => { prefs.fruit = b.dataset.fruit; applyPrefs(); }));
   try { Object.assign(prefs, JSON.parse(ls('fb-prefs') || '{}')); } catch (e) {}
   applyPrefs();
   chkLight.addEventListener('click', () => { prefs.light = !prefs.light; applyPrefs(); });

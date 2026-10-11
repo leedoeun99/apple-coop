@@ -41,7 +41,7 @@
     font-family: var(--font); user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: none;
   }
   .stage * { position: absolute; }
-  .frame { left: 3px; top: 3px; width: 717px; height: 468px; border-radius: 27px; background: linear-gradient(180deg, #1ad175 0, #00cc66 14px); }
+  .frame { left: 3px; top: 3px; width: 717px; height: 468px; border-radius: 27px; background: linear-gradient(180deg, var(--frame-hi, #1ad175) 0, var(--green) 14px); }
   /* the frame's transparent window: stage x 42..677, y 48..426; gingham lines aligned to the original tile phase */
   .plaid {
     left: 42px; top: 48px; width: 635px; height: 378px; background-color: var(--board-a);
@@ -148,6 +148,34 @@
   .start .big-apple .cap { font-size: 30px; font-weight: 800; }
   .start .msg { left: calc(var(--cx) - 200px); top: 258px; width: 400px; text-align: center; color: #1f6b35; font-weight: 700; font-size: 15px; line-height: 1.4; }
 
+  /* ---------- 블루베리 테마 ---------- */
+  .fruit-btn { position: static; flex: 1; height: 36px; border-radius: 8px; border: 2px solid #8fd79a; background: #fff; color: #333; font-weight: 700; cursor: pointer; font-family: var(--font); font-size: 14px; }
+  .fruit-btn.on { border-color: var(--green-dk); background: var(--green); color: #fff; }
+  .form .fruits { position: static; display: flex; gap: 8px; }
+  .apple .bbody, .big-svg .bbig { display: none; }
+  #bb-grad stop:nth-child(1) { stop-color: #94a0ff; } #bb-grad stop:nth-child(2) { stop-color: #4b57e8; } #bb-grad stop:nth-child(3) { stop-color: #262c9a; }
+  .light #bb-grad stop:nth-child(1) { stop-color: #d6dbff; } .light #bb-grad stop:nth-child(2) { stop-color: #98a2f7; } .light #bb-grad stop:nth-child(3) { stop-color: #6f7ad8; }
+  #bb-grad-big stop:nth-child(1) { stop-color: #a3adff; } #bb-grad-big stop:nth-child(2) { stop-color: #5560ee; } #bb-grad-big stop:nth-child(3) { stop-color: #2a30a8; }
+  .light #bb-grad-big stop:nth-child(1) { stop-color: #dfe3ff; } .light #bb-grad-big stop:nth-child(2) { stop-color: #a4acf8; } .light #bb-grad-big stop:nth-child(3) { stop-color: #7a84dc; }
+  body.theme-blueberry { --green: #4fae5a; --green-dk: #35874a; }
+  .stage.theme-blueberry { --green: #4fae5a; --green-dk: #35874a; --frame-hi: #7fd088; --board-a: #fff3c0; --board-b: #fffce9; }
+  .stage.theme-blueberry.light .plaid { --board-a: #fff8d6; --board-b: #ffffff; }
+  .stage.theme-blueberry .apple .body, .stage.theme-blueberry .apple .stem { display: none; }
+  .stage.theme-blueberry .apple .bbody { display: inline; }
+  .stage.theme-blueberry .big-svg use:not(.bbig) { display: none; }
+  .stage.theme-blueberry .big-svg .bbig { display: inline; }
+  .stage.theme-blueberry .score { color: #3b48d6; }
+  .stage.theme-blueberry .bt-reset.warn { background: #ff9900; }
+  .stage.theme-blueberry .lobby .logo .small { color: #35874a; }
+  .stage.theme-blueberry .lobby .logo .big { color: #4b57e8; }
+  .stage.theme-blueberry .lobby .logo .big i { color: #4fae5a; }
+  .stage.theme-blueberry .form label, .stage.theme-blueberry .form small, .stage.theme-blueberry .form .cap,
+  .stage.theme-blueberry .result .msg, .stage.theme-blueberry .start .msg { color: #2f3a9e; }
+  .stage.theme-blueberry .form input { border-color: #a9d8ae; }
+  .stage.theme-blueberry .form input:focus { outline-color: #ffe066; border-color: #4fae5a; }
+  .stage.theme-blueberry .fruit-btn { border-color: #a9d8ae; }
+  .stage.theme-blueberry .fruit-btn.on { border-color: var(--green-dk); }
+
   /* under the stage */
   .bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; font-size: 13px; }
   .bar .code { font-family: var(--font); font-weight: 800; font-size: 18px; letter-spacing: 0.12em; color: var(--green-dk); }
@@ -187,6 +215,19 @@
           <path fill="var(--ba-stem, #990000)" transform="translate(0.7 -71)" d="M-5 12.7L-4.2 4.4Q-3.6 -4.7 -3.1 -8.2Q-3 -9.9 -2.8 -10.5Q-2.3 -12.1 -1 -12.9Q0.4 -13.6 2.1 -13.2Q3.7 -12.9 4.6 -11.5Q5.3 -10.1 5 -8.6L4.8 -7.6L4.8 -7.4L4.1 0.1L3.7 5L3.5 6.6L3 12.6L-1.6 13.4L-5 12.7Z"/>
           <path fill="var(--ba-leaf, #339900)" transform="translate(21.4 -73.9)" d="M-17.1 9.5L-16.9 7.9L-16.5 3L-15.6 2.2Q-11.1 -1.7 -3.7 -5.1Q3.5 -8.5 9.5 -9.4Q12.2 -9.8 14.8 -9.2Q17.1 -8.8 17.2 -8.3Q17.4 -7.6 16.4 -6Q15.2 -3.9 13.2 -2.1Q8.7 1.6 1.3 5.1Q-6 8.5 -12 9.4Q-13.7 9.7 -15.1 9.7Q-16.3 9.7 -17.1 9.5Z"/>
         </g>
+        <radialGradient id="bb-grad" cx="38%" cy="32%" r="72%"><stop offset="0"/><stop offset="0.45"/><stop offset="1"/></radialGradient>
+        <radialGradient id="bb-grad-big" cx="40%" cy="32%" r="72%"><stop offset="0"/><stop offset="0.45"/><stop offset="1"/></radialGradient>
+        <path id="bb-calyx" fill="#1d2160" d="M0 -3.4L1.1 -1.6L3.2 -1.3L1.7 0.2L2.1 2.3L0 1.3L-2.1 2.3L-1.7 0.2L-3.2 -1.3L-1.1 -1.6Z"/>
+        <g id="bb-body-g">
+          <ellipse cx="0" cy="1.6" rx="12.4" ry="11.6" fill="url(#bb-grad)"/>
+          <ellipse cx="-4.2" cy="-3.6" rx="3.6" ry="2" fill="#ffffff" opacity="0.32"/>
+          <use href="#bb-calyx" transform="translate(0 -8.6) scale(1.25)"/>
+        </g>
+        <g id="big-bb-g">
+          <ellipse cx="0" cy="0" rx="72" ry="60" fill="url(#bb-grad-big)"/>
+          <ellipse cx="-24" cy="-26" rx="20" ry="11" fill="#ffffff" opacity="0.3"/>
+          <use href="#bb-calyx" transform="translate(0 -51) scale(6.5)"/>
+        </g>
         <path id="ap-body" fill="var(--ap-body, #ff3333)" transform="translate(0 1.64)" d="M-8.7 7.6Q-12.4 3.6 -12.4 -1.8Q-12.4 -8.5 -8.4 -10.8Q-6.7 -11.9 -2.9 -11Q-1.4 -10.6 -0.1 -10.1L0.6 -9.9L1.5 -10.2L3.9 -10.8Q7.5 -11.6 9 -10.6Q11.1 -9.4 11.9 -6.9Q12.5 -5.1 12.5 -1.8Q12.5 3.6 8.8 7.6Q5.2 11.5 0 11.5Q-5.1 11.5 -8.7 7.6Z"/>
         <path id="ap-stem" fill="#993300" transform="translate(1.8 -10.675)" d="M-2.2 2.1Q-2.1 1.3 -1.7 0.5Q-1.1 -0.5 -0.2 -1.2L0.2 -1.8Q0.4 -2 0.7 -2.2Q1.1 -2.4 1.5 -2.4Q2 -2.4 2.1 -2.2Q2.2 -2.1 2.2 -2.1Q2.3 -2.1 2.3 -2Q2.3 -2 2.3 -1.9Q2.3 -1.8 2.2 -1.8L1.3 -0.9Q0.6 -0.3 0.2 0.5Q-0.1 1.3 -0.2 2.1L-1.4 2.5L-2.2 2.1Z"/>
         <path id="ap-selo" fill="#ffff66" transform="translate(0 1.63) scale(1.09)" d="M-10.5 9.3Q-14.9 4.6 -14.9 -1.8Q-14.9 -10.2 -9.7 -13Q-7.3 -14.6 -2.2 -13.4Q-0.7 -13 0.6 -12.5L0.7 -12.5L3.4 -13.3Q8.2 -14.3 10.3 -12.8L10.3 -12.7Q13.2 -11 14.3 -7.7Q15 -5.6 15 -1.8Q15 4.6 10.7 9.3Q6.3 14 0 14Q-6.2 14 -10.5 9.3Z"/>
@@ -209,7 +250,7 @@
       <!-- lobby -->
       <div class="layer lobby" id="lobby">
         <div class="logo"><span class="small">협동전</span><span class="big">Fruit <i>Box</i></span></div>
-        <button class="big-apple play" id="playBtn" type="button"><svg class="big-svg" viewBox="-75 -90 150 152"><use href="#big-apple-g"/></svg><span class="cap"><span>Play</span></span></button>
+        <button class="big-apple play" id="playBtn" type="button"><svg class="big-svg" viewBox="-75 -90 150 152"><use href="#big-apple-g"/><use href="#big-bb-g" class="bbig"/></svg><span class="cap"><span>Play</span></span></button>
         <div class="form">
           <div>
             <label for="nameIn">이름</label>
@@ -223,20 +264,27 @@
             </div>
             <small>친구가 같은 코드를 입력하면 같은 방에 들어옵니다. 영문·숫자 2~8자.</small>
           </div>
+          <div>
+            <label>과일</label>
+            <div class="fruits">
+              <button type="button" class="fruit-btn on" data-fruit="apple">🍎 사과</button>
+              <button type="button" class="fruit-btn" data-fruit="blueberry">🫐 블루베리</button>
+            </div>
+          </div>
           <div class="cap" id="lobbyCap">서버에 연결하는 중…</div>
         </div>
       </div>
 
       <!-- waiting for a round -->
       <div class="layer start" id="startLayer" hidden>
-        <button class="big-apple" id="startBtn" type="button"><svg class="big-svg" viewBox="-75 -90 150 152"><use href="#big-apple-g"/></svg><span class="cap"><span>Start</span></span></button>
+        <button class="big-apple" id="startBtn" type="button"><svg class="big-svg" viewBox="-75 -90 150 152"><use href="#big-apple-g"/><use href="#big-bb-g" class="bbig"/></svg><span class="cap"><span>Start</span></span></button>
         <div class="msg" id="startMsg">Start를 누르면 2분 동안 같이 사과를 지웁니다.</div>
       </div>
 
       <!-- result -->
       <div class="layer result" id="resultLayer" hidden>
         <div class="msg" id="resultMsg"></div>
-        <div class="big-apple"><svg class="big-svg" viewBox="-75 -90 150 152"><use href="#big-apple-g"/></svg><span class="cap"><span>Score</span><b id="finalScore">0</b></span></div>
+        <div class="big-apple"><svg class="big-svg" viewBox="-75 -90 150 152"><use href="#big-apple-g"/><use href="#big-bb-g" class="bbig"/></svg><span class="cap"><span>Score</span><b id="finalScore">0</b></span></div>
         <button class="big-btn again" id="againBtn" type="button">Play Again</button>
         <button class="big-btn lobbyBtn" id="lobbyBtn" type="button">Lobby</button>
       </div>
