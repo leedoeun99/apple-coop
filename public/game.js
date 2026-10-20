@@ -150,6 +150,52 @@
   }
   function peerList() { const l = peers.length ? peers : [{ id: myId, name: me.name, color: me.color }]; return l.map((p) => ({ name: p.name, color: p.color, isMe: p.id === myId })); }
 
+
+  // ---------- 코인 연출: 10을 만들어 지울 때 금화가 점수로 날아가고 "띠링" ----------
+  const coinLayer = document.createElement('div'); coinLayer.className = 'coins';
+  boardEl.appendChild(coinLayer);
+  const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function spawnCoin(i, k) {
+    if (reduceMotion || !document.body.animate) return;
+    const cx = AX + GAP * (i % COLS), cy = AY + GAP * Math.floor(i / COLS) + 2;
+    for (let c = 0; c < 4; c++) {
+      const el = document.createElement('div'); el.className = 'coin';
+      coinLayer.appendChild(el);
+      const ang = -Math.PI / 2 + (Math.random() - 0.5) * 2.2;       // 위쪽으로 부채꼴
+      const dist = 12 + Math.random() * 14;
+      const dx = Math.cos(ang) * dist, dy = Math.sin(ang) * dist;
+      try {
+        const anim = el.animate([
+          { transform: 'translate(' + (cx - 3) + 'px,' + (cy - 3) + 'px) scale(0.6)', opacity: 1 },
+          { transform: 'translate(' + (cx - 3 + dx) + 'px,' + (cy - 3 + dy) + 'px) scale(1)', opacity: 1, offset: 0.55 },
+          { transform: 'translate(' + (cx - 3 + dx * 1.15) + 'px,' + (cy - 3 + dy + 10) + 'px) scale(0.7)', opacity: 0 }
+        ], { duration: 380 + Math.random() * 120, delay: k * 25, easing: 'cubic-bezier(0.2, 0.8, 0.5, 1)', fill: 'forwards' });
+        anim.onfinish = () => el.remove();
+      } catch (e) { el.remove(); }
+      setTimeout(() => { if (el.parentNode) el.remove(); }, 1200);
+    }
+  }
+  function coinDing(n) {
+    if (prefs.vol <= 0) return;
+    try {
+      const ctx = actxGet();
+      const dings = n >= 4 ? 2 : 1;
+      for (let d = 0; d < dings; d++) {
+        const t = ctx.currentTime + d * 0.09;
+        const f1 = 988 * Math.pow(2, d / 12), f2 = 1319 * Math.pow(2, d / 12);
+        const o = ctx.createOscillator(), e = ctx.createGain();
+        o.type = 'triangle';
+        o.frequency.setValueAtTime(f1, t); o.frequency.setValueAtTime(f2, t + 0.075);
+        e.gain.setValueAtTime(0.0001, t); e.gain.exponentialRampToValueAtTime(0.45 * prefs.vol, t + 0.01);
+        e.gain.setValueAtTime(0.45 * prefs.vol, t + 0.075); e.gain.exponentialRampToValueAtTime(0.0001, t + 0.32);
+        o.connect(e).connect(ctx.destination); o.start(t); o.stop(t + 0.36);
+      }
+    } catch (e) {}
+  }
+  function scorePop() {
+    try { scoreEl.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.25)' }, { transform: 'scale(1)' }], { duration: 220, easing: 'ease-out' }); } catch (e) {}
+  }
+
   // ---------- 렌더 ----------
   function render() {
     if (game && game.id !== renderedGameId) {
@@ -158,13 +204,16 @@
     }
     if (game) {
       const cl = game.cleared || {};
+      let fresh = 0;
       for (let i = 0; i < N; i++) {
         if (cl[i] && !cells[i].classList.contains('gone') && !cells[i].classList.contains('pop')) {
           const el = cells[i];
           el.classList.remove('hl'); el.classList.add('pop');
           setTimeout(() => { el.classList.add('gone'); el.classList.remove('pop'); }, 180);
+          if (renderedGameId === game.id && playing()) { spawnCoin(i, fresh); fresh++; }
         }
       }
+      if (fresh) { coinDing(fresh); scorePop(); }
     } else {
       for (let i = 0; i < N; i++) { cells[i].setAttribute('class', 'apple gone'); }
       renderedGameId = null;
@@ -242,7 +291,7 @@
   chkLight.addEventListener('click', () => { prefs.light = !prefs.light; applyPrefs(); });
   chkSound.addEventListener('click', () => { prefs.sound = !prefs.sound; applyPrefs(); bgmSync(); });
   vol.addEventListener('input', () => { prefs.vol = vol.value / 100; ls('fb-prefs', JSON.stringify(prefs)); bgmSync(); });
-  vol.addEventListener('change', () => pop(1));
+  vol.addEventListener('change', () => coinDing(1));
 
   // ---------- 드래그 선택 ----------
   let drag = null, hl = [], lastSelSent = 0;
@@ -301,7 +350,7 @@
     if (r.sum === 10 && r.inside.length) {
       // 먼저 화면에서 지우고(즉시 반응), 서버가 확정한 판으로 다시 맞춤
       r.inside.forEach((i) => { game.cleared[i] = me.name; });
-      pop(r.inside.length); render();
+      render();
       sendMsg({ t: 'clear', idxs: r.inside });
     }
   }

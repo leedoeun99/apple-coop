@@ -69,6 +69,13 @@
   .tbar { left: 650px; top: 93px; width: 9px; height: 302px; background: #ebf8dd; border-radius: 2px; }
   .tfill { left: 1px; right: 1px; bottom: 1px; height: 300px; background: var(--green); border-radius: 1px; }
 
+  .coins { left: 0; top: 0; width: 720px; height: 470px; pointer-events: none; z-index: 6; overflow: visible; }
+  .coin {
+    left: 0; top: 0; width: 6px; height: 6px; border-radius: 50%; will-change: transform;
+    background: radial-gradient(circle at 40% 35%, #fff5b0 0, #ffd43b 55%, #e09a0e 100%);
+    box-shadow: inset 0 0 0 1px #b8780a, 0 1px 1px rgba(0, 0, 0, 0.25);
+  }
+  .score { transform-origin: right center; }
   .sel { border: 2px solid #ffff00; pointer-events: none; z-index: 3; border-radius: 2px; }
   .sel .sum { right: -2px; bottom: -2px; transform: translateY(100%); background: #333; color: #ffff66; font-weight: 700; font-size: 11px; line-height: 1; padding: 2px 5px; border-radius: 4px; }
   .sel.ten { border-color: #ffd400; }
