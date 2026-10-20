@@ -148,6 +148,10 @@
   .result .big-apple { left: calc(var(--cx) - 75px); top: 29px; cursor: default; }
   .result .big-apple .cap { font-size: 20px; font-weight: 700; }
   .result .big-apple .cap b { font-size: 46px; line-height: 1; margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .result .pay { left: calc(var(--cx) - 200px); top: 196px; width: 400px; text-align: center; font-family: var(--font); font-weight: 800; font-size: 22px; line-height: 1.2; color: #e8451f; text-shadow: 0 1px 0 #fff; }
+  .result .pay small { position: static; font-size: 13px; font-weight: 700; color: #1f6b35; margin-left: 6px; }
+  .stage.theme-blueberry .result .pay { color: #d9780a; }
+  .stage.theme-blueberry .result .pay small { color: #8a4b00; }
   .result .again { top: 249px; }
   .result .lobbyBtn { top: 289px; }
   .result .msg { left: calc(var(--cx) - 200px); top: 2px; width: 400px; text-align: center; color: #1f6b35; font-weight: 700; font-size: 15px; }
@@ -292,6 +296,7 @@
       <div class="layer result" id="resultLayer" hidden>
         <div class="msg" id="resultMsg"></div>
         <div class="big-apple"><svg class="big-svg" viewBox="-75 -90 150 152"><use href="#big-apple-g"/><use href="#big-bb-g" class="bbig"/></svg><span class="cap"><span>Score</span><b id="finalScore">0</b></span></div>
+        <div class="pay" id="payLine"></div>
         <button class="big-btn again" id="againBtn" type="button">Play Again</button>
         <button class="big-btn lobbyBtn" id="lobbyBtn" type="button">Lobby</button>
       </div>

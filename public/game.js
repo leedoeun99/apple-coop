@@ -66,7 +66,7 @@
   // ---------- 효과음 ----------
   let actx = null;
   function pop(n) {
-    if (prefs.vol <= 0) return;
+    if (!prefs.sound || prefs.vol <= 0) return;
     try {
       actxGet();
       const t = actx.currentTime;
@@ -176,7 +176,7 @@
     }
   }
   function coinDing(n) {
-    if (prefs.vol <= 0) return;
+    if (!prefs.sound || prefs.vol <= 0) return;
     try {
       const ctx = actxGet();
       const dings = n >= 4 ? 2 : 1;
@@ -243,6 +243,7 @@
     $('startMsg').textContent = connected ? 'Start를 누르면 2분 동안 같이 사과를 지웁니다.' : '서버에 다시 연결하는 중…';
     if (!resultLayer.hidden) {
       $('finalScore').textContent = scoreOf(game);
+      const pay = $('payLine'); if (pay) { pay.textContent = ''; pay.append(document.createTextNode('일당 ' + (scoreOf(game) * 10).toLocaleString('ko-KR') + '만원')); const sm = document.createElement('small'); sm.textContent = '1점 = 10만원'; pay.appendChild(sm); }
       const b = best ? best.score : 0;
       const t = tally(game); const parts = Object.keys(t).sort((x, y) => t[y] - t[x]).map((k) => k + ' ' + t[k]);
       $('resultMsg').textContent = (scoreOf(game) > 0 && scoreOf(game) >= b ? '이 방 최고 기록!' : '최고 기록 ' + b + '점') + (parts.length > 1 ? '  ·  ' + parts.join(' · ') : '');
