@@ -148,16 +148,17 @@
   .result .big-apple { left: calc(var(--cx) - 75px); top: 29px; cursor: default; }
   .result .big-apple .cap { font-size: 20px; font-weight: 700; }
   .result .big-apple .cap b { font-size: 46px; line-height: 1; margin-top: 2px; font-variant-numeric: tabular-nums; }
-  .result .pay { left: calc(var(--cx) - 200px); top: 196px; width: 400px; text-align: center; font-family: var(--font); font-weight: 800; font-size: 22px; line-height: 1.2; color: #e8451f; text-shadow: 0 1px 0 #fff; }
+  .result .pay { left: var(--cx); top: 192px; transform: translateX(-50%); white-space: nowrap; text-align: center; font-family: var(--font); font-weight: 800; font-size: 22px; line-height: 1.2; color: #e8451f; background: rgba(255, 255, 255, 0.95); border: 2px solid #fff; border-radius: 999px; padding: 5px 18px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15); }
   .result .pay small { position: static; font-size: 13px; font-weight: 700; color: #1f6b35; margin-left: 6px; }
   .stage.theme-blueberry .result .pay { color: #d9780a; }
   .stage.theme-blueberry .result .pay small { color: #8a4b00; }
   .result .again { top: 249px; }
   .result .lobbyBtn { top: 289px; }
-  .result .msg { left: calc(var(--cx) - 200px); top: 2px; width: 400px; text-align: center; color: #1f6b35; font-weight: 700; font-size: 15px; }
+  .result .msg { left: var(--cx); top: 4px; transform: translateX(-50%); white-space: nowrap; max-width: 600px; overflow: hidden; text-overflow: ellipsis; text-align: center; color: #1f6b35; font-weight: 700; font-size: 15px; background: rgba(255, 255, 255, 0.95); border-radius: 999px; padding: 3px 14px; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12); }
+  .result .msg:empty { display: none; }
   .start .big-apple { left: calc(var(--cx) - 75px); top: 88px; }
   .start .big-apple .cap { font-size: 30px; font-weight: 800; }
-  .start .msg { left: calc(var(--cx) - 200px); top: 258px; width: 400px; text-align: center; color: #1f6b35; font-weight: 700; font-size: 15px; line-height: 1.4; }
+  .start .msg { left: var(--cx); top: 258px; transform: translateX(-50%); white-space: nowrap; text-align: center; color: #1f6b35; font-weight: 700; font-size: 15px; line-height: 1.4; background: rgba(255, 255, 255, 0.95); border-radius: 999px; padding: 4px 16px; }
 
   /* ---------- 블루베리 테마 ---------- */
   .fruit-btn { position: static; flex: 1; height: 36px; border-radius: 8px; border: 2px solid #8fd79a; background: #fff; color: #333; font-weight: 700; cursor: pointer; font-family: var(--font); font-size: 14px; }
